@@ -1,4 +1,4 @@
-[ORG 0x00]				; Start address is 0x00
+;[ORG 0x00]				; Start address is 0x00
 [BITS 16]				; Code is 16 bit
 
 SECTION .text				; Define text section
@@ -110,7 +110,7 @@ READDATA:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;	Calculate address, track, head, sector address
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-	add si, 0x020			; 1 sector reading is 512 byte(0x200)
+	add si, 0x0020			; 1 sector reading is 512 byte(0x200)
 	mov es, si			; ES is base register
 	
 	; After 1 sector reading, increase sector number and
@@ -203,7 +203,7 @@ PRINTMESSAGE:
 	mov si, word [ bp + 8 ] 	; parameter 3 (2*(1+3))
 	
 .MESSAGELOOP:				; Print message
-	mov cl, byte [ si + MESSAGE1]	; Copy the value of si + MESSAGE1 address to CL register.
+	mov cl, byte [ si ]		; Copy the value of si address to CL register.
 					; CL register is low 1 byte of CX register
 									
 	cmp cl, 0 			; if charater is 0, it means end.
@@ -231,7 +231,6 @@ PRINTMESSAGE:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 MESSAGE1: 
 	db 'Karlinux OS Boot Loader Start!!', 0	
-					; Message
 
 DISKERRORMESSAGE:
 	db 'DISK ERROR~!!', 0
@@ -250,7 +249,8 @@ HEADNUMBER:
 TRACKNUMBER:
 	db 0x00				; Start track number of OS image
 
-	times 510 - ( $ - $$ )	db	0x00	; $: adress of current line
+	times 510 - ( $ - $$ )	db	0x00	
+					; $: adress of current line
 					; $$: start address of current section
 					; $ - $$: Offset from current section
 					; 510 - ( $ - $$ ): from here to address 510
