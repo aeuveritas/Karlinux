@@ -9,7 +9,7 @@ SECTION .text				; Define text section
 ;	Environment setting
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 TOTALSECTORCOUNT:
-	dw	1024			; Maximum image size is 1152 sector(0x90000byte)
+	dw	1			; Maximum image size is 1152 sector(0x90000byte)
 					; except for bootloader
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -183,7 +183,7 @@ PRINTMESSAGE:
 	mov es, ax			; Set ES with AX
 	
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;	Calculate the vidoe address from X, Y
+;	Calculate the video address from X, Y
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 	; Get line address from Y
 	mov ax, word [ bp + 6 ] 	; Set AX with parameter 2 (2*(1+2))

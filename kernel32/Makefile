@@ -1,10 +1,10 @@
-all: virtualOS.bin
+all: kernel32.bin
 
-virtualOS.bin: virtualOS.asm
-	nasm virtualOS.asm -f elf -g -o virtualOS.elf
-	x86_64-pc-linux-objcopy -O binary virtualOS.elf virtualOS.bin
+kernel32.bin: source/entryPoint.s
+	nasm $< -f elf -g -o kernel32.elf
+	x86_64-pc-linux-objcopy -O binary kernel32.elf kernel32.bin
 
 clean:
-	rm -f virtualOS.bin
-	rm -f virtualOS.elf
+	rm -f kernel32.bin
+	rm -f kernel32.elf
 
