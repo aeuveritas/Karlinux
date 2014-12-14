@@ -50,7 +50,7 @@ PROTECTEDMODE:
 	call PRINTMESSAGE		; Call PRINTMESSAGE function
 	add esp, 12			; Remove params
 
-	jmp $				; Infinite loop
+	jmp dword 0x08: 0x10200		; 0x10200 is address for C kernel
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;	Function Code Section

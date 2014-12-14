@@ -9,7 +9,7 @@ SECTION .text				; Define text section
 ;	Environment setting
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 TOTALSECTORCOUNT:
-	dw	1			; Maximum image size is 1152 sector(0x90000byte)
+	dw	0x02			; Maximum image size is 1152 sector(0x90000byte)
 					; except for bootloader
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
