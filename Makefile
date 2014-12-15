@@ -27,7 +27,7 @@ Disk.img: bootLoader/bootLoader.bin kernel32/kernel32.bin
 	@echo ======= DISK Image Build Start =======
 	@echo
 
-	./imageMaker	
+	./imageMaker $^	
 	
 	@echo 
 	@echo ======= All Build Complete =======
@@ -37,4 +37,3 @@ clean:
 	make -C bootLoader clean
 	make -C kernel32 clean
 	rm -f Disk.img
-	

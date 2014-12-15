@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <fcntl.h>
-#include <io.h>
+#include <sys/io.h>
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <errno.h>
@@ -30,10 +30,18 @@ int main( int argc, char* argv[] )
 	}
 
 	// Generate disk.img
-	if ( ( iTargetFd = open( "disk.img", O_RDWR | O_CREAT | O_TRUNC |
-		O_BINARY, S_IREAD | S_IWRITE ) ) == -1 )
+	if ( ( iTargetFd = open( "disk.img", O_RDWR | O_CREAT | O_TRUNC
+		, S_IREAD | S_IWRITE ) ) == -1 )
 	{
 		fprintf( stderr, "[Error] %s open fail\n", argv[1] );
+		exit( -1 );
+	}
+
+	// Open bootloader file and copy it to disk.img
+	printf( "[INFO] Copy boot loader to image file\n");
+	if ( ( iSourceFd = open( argv[1], O_RDONLY ) ) == -1 )
+	{
+		fprintf( stderr, "[ERROR] %s open fail\n", argv[1] );
 		exit( -1 );
 	}
 
@@ -50,7 +58,7 @@ int main( int argc, char* argv[] )
 	 */
 	printf( "[INFO] Copy protected mode kernel to image file\n" );
 	
-	if ( ( iSourceFd = open(argv[2], O_RDONLY | O_BINARY ) ) == -1 )
+	if ( ( iSourceFd = open(argv[2], O_RDONLY ) ) == -1 )
 	{
 		fprintf( stderr, "[ERROR] %s open fail\n", argv[2] );
 		exit( -1 );
@@ -62,7 +70,7 @@ int main( int argc, char* argv[] )
 	// To fill rest of memory to 512, set 0x00
 	iKernel32SectorCount = adjustInSectorSize( iTargetFd, iSourceSize );
 	printf( "[INFO] %s size = [%d] and sector count = [%d]\n",
-		argv[2], iSourceSize, iKErnel32SectorCount );
+		argv[2], iSourceSize, iKernel32SectorCount );
 
 	/*
 	 * Update kernel information to disk.img
@@ -105,7 +113,7 @@ int adjustInSectorSize( int iFd, int iSourceSize )
 
 	// Return the number of sector
 	iSectorCount = ( iSourceSize + iAdjustSizeToSector ) / BYTESOFSECTOR;
-	return iSectorcount;
+	return iSectorCount;
 }
 
 // Insert kernel information to BootLoader
@@ -123,7 +131,7 @@ int writeKernelInformation( int iTargetFd, int iKernelSectorCount )
 		exit( -1 );
 	}
 
-	usData = ( unsigned shrt ) iKernelSectorCount;
+	usData = ( unsigned short ) iKernelSectorCount;
 	write( iTargetFd, &usData, 2 );
 	
 	printf( "[INFO] Total sector count except boot loader [%d]\n",
@@ -136,7 +144,7 @@ int copyFile( int iSourceFd, int iTargetFd )
 	int iSourceFileSize;
 	int iRead;
 	int iWrite;
-	char vcBuffer[ BYTEOFSECTOR ];
+	char vcBuffer[ BYTESOFSECTOR ];
 
 	iSourceFileSize = 0;
 

@@ -3,7 +3,7 @@
 void kPrintSting( int ix, int iY, const char* pcString );
 
 // Main function
-void Main(void)
+void main(void)
 {
 	kPrintString( 0, 3, "C Language Kernel Started~!!!" );
 
@@ -11,7 +11,7 @@ void Main(void)
 }
 
 // Print string
-void kPrintSting( int ix, int iY, const char* pcString )
+void kPrintString( int iX, int iY, const char* pcString )
 {
 	CHARACTER* pstScreen = ( CHARACTER* ) 0xB8000;
 	int i;

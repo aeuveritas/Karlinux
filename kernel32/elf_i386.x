@@ -47,7 +47,7 @@ SECTIONS
   . = SEGMENT_START("ldata-segment", .);
   . = ALIGN(32 / 8);
   _end = .; PROVIDE (end = .);
-  . = DATA_SEGMENT_END (.); 
+  //. = DATA_SEGMENT_END (.); 
   /* Karlinux - 1 */
 
   .interp         : { *(.interp) }
@@ -161,7 +161,7 @@ SECTIONS
   .data.rel.ro : { *(.data.rel.ro.local* .gnu.linkonce.d.rel.ro.local.*) *(.data.rel.ro .data.rel.ro.* .gnu.linkonce.d.rel.ro.*) }
   .dynamic        : { *(.dynamic) }
   .got            : { *(.got) *(.igot) }
-  . = DATA_SEGMENT_RELRO_END (SIZEOF (.got.plt) >= 12 ? 12 : 0, .);
+  //. = DATA_SEGMENT_RELRO_END (SIZEOF (.got.plt) >= 12 ? 12 : 0, .);
   .got.plt        : { *(.got.plt)  *(.igot.plt) }
   
   /* Karlinux - 3 */
