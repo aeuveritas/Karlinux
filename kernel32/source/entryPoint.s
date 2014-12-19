@@ -1,4 +1,4 @@
-[  BITS 16 ]				; Below codes are 16 bit
+[BITS 16]				; Below codes are 16 bit
 
 SECTION .text				; Define text section
 
@@ -20,7 +20,7 @@ START:
 
 	jc .A20GATEERROR			; Check A20 Gate enabled or disabled
 	jmp .A20GATESUCCESS
-
+ 
 .A20GATEERROR:
 	; If fail, try with system control port
 	in al, 0x92				; Read system control port 1 byte, and store it at AL
@@ -43,14 +43,14 @@ START:
 	; Replace standard of kernel code segment as 0x00
 	; and change EIP as 0x00
 	; CS segment selector : EIP
-	jmp dword 0x08: ( PROTECTEDMODE - $$ + 0x10000 )
+	jmp dword 0x18: ( PROTECTEDMODE - $$ + 0x10000 )
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;	Enter Protected Mode
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-[ BITS 32 ]
+[BITS 32]
 PROTECTEDMODE:
-	mov ax, 0x10			; Data segment descripter for protected mode is 0x10
+	mov ax, 0x20			; Data segment descriptor for protected mode is 0x10
 	mov ds, ax				; Set DS
 	mov es, ax				; Set ES
 	mov fs, ax				; Set FS
@@ -69,7 +69,7 @@ PROTECTEDMODE:
 	call PRINTMESSAGE		; Call PRINTMESSAGE function
 	add esp, 12				; Remove params
 
-	jmp dword 0x08: 0x10200	; 0x10200 is address for C kernel
+	jmp dword 0x18: 0x10200	; 0x10200 is address for C kernel
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;	Function Code Section
@@ -115,8 +115,8 @@ PRINTMESSAGE:
     cmp cl, 0               ; if charater is 0, it means end.
     je .MESSAGEEND          ; if cl is 0, jump to .MESSAGEEND
 
-    mov byte [ edi + 0xB8000], cl   
-							; if cl is not 0, print value of edi + 0xB8000 address
+    mov byte [ edi + 0xB8000 ], cl   
+				; if cl is not 0, print value of edi + 0xB8000 address
 
     add esi, 1              ; Move to the next character
     add edi, 2              ; Move to the next address
@@ -144,7 +144,7 @@ dw 0x0000
 GDTR:
 	dw GDTEND - GDT - 1		; Total size of GDT
 	dd ( GDT - $$ + 0x10000 )	
-							; Start address of GDT
+					; Start address of GDT
 
 ; Define GDT
 GDT:
@@ -156,30 +156,48 @@ GDT:
 		db 0x00
 		db 0x00
 		db 0x00
+		
+	; Code segment descriptor for IA-32e mode
+	IA_32eCODEDESCRIPTOR:
+		dw 0xFFFF		; Limit [15:0]
+		dw 0x0000		; Base [15:0]
+		db 0x00			; Base [23:16]
+		db 0x9A			; P=1, DPL=0, Code segment, Execute/Read
+		db 0xAF			; G=1, D=0, L=1, Limit[19:16]
+		db 0x00			; Base [31:24]
+		
+	; Data segment descriptor for IA-32e mode
+	IA_32eDATADESCRIPTOR:
+		dw 0xFFFF		; Limit [15:0]
+		dw 0x0000		; Base [15:0]
+		db 0x00			; Base [23:16]
+		db 0x92			; P=1, DPL=0, Data segment, Read/Write
+		db 0xAF			; G=1, D=0, L=1, Limit[19:16]
+		db 0x00			; Base [31:24]
 
 	; Code segment descriptor for protected mode
 	CODEDESCRIPTOR:
-		dw 0xFFFF			; Limit [15:0]
-		dw 0x0000			; Base [15:0]
-		db 0x00				; Base [23:16]
-		db 0x9A				; P=1, DPL=0, Code segment, Execute/Read
-		db 0xCF				; G=1, D=1, L=0, Limit[19:16]
-		db 0x00				; Base [31:24]
+		dw 0xFFFF		; Limit [15:0]
+		dw 0x0000		; Base [15:0]
+		db 0x00			; Base [23:16]
+		db 0x9A			; P=1, DPL=0, Code segment, Execute/Read
+		db 0xCF			; G=1, D=1, L=0, Limit[19:16]
+		db 0x00			; Base [31:24]
 
 	; Data segment descriptor for protected mode
 	DATADESCRIPTOR:
-		dw 0xFFFF			; Limit [15:0]
-		dw 0x0000			; Base [15:0]
-		db 0x00				; Base [23:16]
-		db 0x92				; P=1, DPL=0, Data segment, Read/Write
-		db 0xCF				; G=1, D=1, L=0, Limit[19:16]
-		db 0x00				; Base [31:24]
+		dw 0xFFFF		; Limit [15:0]
+		dw 0x0000		; Base [15:0]
+		db 0x00			; Base [23:16]
+		db 0x92			; P=1, DPL=0, Data segment, Read/Write
+		db 0xCF			; G=1, D=1, L=0, Limit[19:16]
+		db 0x00			; Base [31:24]
 GDTEND:
  
 SWITCHSUCCESSMESSAGE:
 	db 'Switch To Protected Mode Success~!!', 0
 
 times 512 - ( $ - $$ ) db 0x00		
-							; Fill 512 bytes
+					; Fill 512 bytes
 
 	

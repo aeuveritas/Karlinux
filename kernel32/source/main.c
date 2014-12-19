@@ -1,5 +1,6 @@
 #include "types.h"
 #include "page.h"
+#include "modeSwitch.h"
 
 void kPrintString( int ix, int iY, const char* pcString );
 BOOL kInitializeKernel64Area( void );
@@ -9,6 +10,8 @@ BOOL kIsMemoryEnough( void );
 void main(void)
 {
 	DWORD i;
+	DWORD dwEAX, dwEBX, dwECX, dwEDX;
+	char vcVendorString[13] = { 0, };
 	
 	kPrintString( 0, 0, "                                                          " );
 	kPrintString( 0, 0, "C Language Kernel Start.....................[Pass]" );
@@ -42,8 +45,36 @@ void main(void)
 	kPrintString( 0, 3, "IA-32e Page Tables Initialize...............[    ]" );
 	kInitializePageTables();
 	kPrintString( 45, 3, "Pass" );
-
-	while( 1 );
+	
+	// Read information of processor's vendor
+	kReadCPUID( 0x00, &dwEAX, &dwEBX, &dwECX, &dwEDX );
+	*( DWORD * ) vcVendorString = dwEBX;
+	*( ( DWORD * ) vcVendorString + 1 ) = dwEDX;
+	*( ( DWORD * ) vcVendorString + 2 ) = dwECX;
+	kPrintString( 0, 4, "Processor Vendor Recognize..................[         ]" );
+	kPrintString( 45, 4, vcVendorString);
+	
+	// Check 64 bit available
+	kReadCPUID( 0x80000001, &dwEAX, & dwEBX, &dwECX, &dwEDX );
+	kPrintString( 0, 5, "64bit Mode Support Check....................[    ]" );
+	
+	if ( dwEDX & ( 1 << 29 ) )
+	{
+		kPrintString( 45, 5, "Pass");
+	}
+	else
+	{
+		kPrintString( 45, 5, "Fail");
+		kPrintString( 0, 6, "This processor doest not support 64bit mode!!" );
+		while ( 1 );
+	}
+	
+	// Change to IA-32e mode
+	kPrintString( 0, 6, "Switch To IA-32e Mode" );
+	// Not implemented yet
+	// kSwitchAndExecute64bitKernel();
+	
+	while ( 1 );
 }
 
 // Print string
@@ -54,7 +85,7 @@ void kPrintString( int iX, int iY, const char* pcString )
 
 	pstScreen += (iY * 80 ) + iX;
 	
-	for( i = 0 ; pcString[i] != 0 ; i++ )
+	for ( i = 0 ; pcString[i] != 0 ; i++ )
 	{
 		pstScreen[i].bCharactor = pcString[i];
 	}
