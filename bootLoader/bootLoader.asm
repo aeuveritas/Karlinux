@@ -12,6 +12,9 @@ TOTALSECTORCOUNT:
 	dw	0x02			; Maximum image size is 1152 sector(0x90000byte)
 					; except for bootloader
 
+KERNEL32SECTORCOUNT:
+	dw	0x02			; Total number of sector of protected mode
+					
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;	Code Section
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;

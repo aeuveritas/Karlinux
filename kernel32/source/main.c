@@ -5,6 +5,7 @@
 void kPrintString( int ix, int iY, const char* pcString );
 BOOL kInitializeKernel64Area( void );
 BOOL kIsMemoryEnough( void );
+void kCopyKernel64ImageTo2Mbyte( void );
 
 // Main function
 void main(void)
@@ -14,7 +15,7 @@ void main(void)
 	char vcVendorString[13] = { 0, };
 	
 	kPrintString( 0, 0, "                                                          " );
-	kPrintString( 0, 0, "C Language Kernel Start.....................[Pass]" );
+	kPrintString( 0, 0, "Protected Mode C Language Kernel Start......[Pass]" );
 
 	// Check minimum memory size
 	kPrintString( 0, 1, "Minimum Memory Size Check...................[    ]" );
@@ -51,7 +52,7 @@ void main(void)
 	*( DWORD * ) vcVendorString = dwEBX;
 	*( ( DWORD * ) vcVendorString + 1 ) = dwEDX;
 	*( ( DWORD * ) vcVendorString + 2 ) = dwECX;
-	kPrintString( 0, 4, "Processor Vendor Recognize..................[         ]" );
+	kPrintString( 0, 4, "Processor Vendor Recognize..................[            ]" );
 	kPrintString( 45, 4, vcVendorString);
 	
 	// Check 64 bit available
@@ -69,10 +70,14 @@ void main(void)
 		while ( 1 );
 	}
 	
+	// Move IA-32e mode kernel to 0x2000000 (2MB)
+	kPrintString( 0, 6, "Copy UA-32e Kernel To 2M Address............[    ]" );
+	kCopyKernel64ImageTo2Mbyte();
+	kPrintString( 45, 6, "Pass" );
+	
 	// Change to IA-32e mode
-	kPrintString( 0, 6, "Switch To IA-32e Mode" );
-	// Not implemented yet
-	// kSwitchAndExecute64bitKernel();
+	kPrintString( 0, 7, "Switch To IA-32e Mode.......................[    ]" );
+	kSwitchAndExecute64bitKernel();
 	
 	while ( 1 );
 }
@@ -143,4 +148,30 @@ BOOL kIsMemoryEnough( void )
 	}
 
 	return TRUE;
+}
+
+// Move IA-32e mode kernel to 0x2000000 (2MB)
+void kCopyKernel64ImageTo2Mbyte( void )
+{
+	WORD wKernel32SectorCount;
+	WORD wTotalKernelSectorCount;
+	DWORD * pdwSourceAddress;
+	DWORD * pdwDestinationAddress;
+	int i;
+	
+	// The number of total sector: 0x7C05
+	// The number of proteced mode sector: 0x7C07
+	wTotalKernelSectorCount = *( ( WORD * ) 0x7C05 );
+	wKernel32SectorCount = *( ( WORD * ) 0x7C07 );
+	
+	pdwSourceAddress = ( DWORD * ) ( 0x10000 + ( wKernel32SectorCount * 512 ) );
+	pdwDestinationAddress = ( DWORD * ) 0x200000;
+	
+	// Copy IA-32e mode kernel
+	for ( i = 0 ; i < 512 * ( wTotalKernelSectorCount - wKernel32SectorCount ) / 4; i++ )
+	{
+		*pdwDestinationAddress = *pdwSourceAddress;
+		pdwDestinationAddress++;
+		pdwSourceAddress++;
+	}
 }
