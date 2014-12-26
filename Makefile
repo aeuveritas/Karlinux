@@ -48,4 +48,4 @@ clean:
 	make -C bootLoader clean
 	make -C kernel32 clean
 	make -C kernel64 clean
-	rm -f Disk.img
+	rm -f disk.img

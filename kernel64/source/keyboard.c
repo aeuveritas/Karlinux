@@ -2,7 +2,6 @@
 #include "assemblyUtility.h"
 #include "keyboard.h"
 
-
 /* 
  * Input is from processor to devices
  * Output is from devices to processor
@@ -62,7 +61,6 @@ BOOL kActivateKeyboard( void )
 	}
 	// Send enable command(0xF4) to control/state register(port 0x64)
 	kOutPortByte( 0x60, 0xF4 );
-	
 	// Wait for ACK
 	// Check ACK in received 100 data,
 	// Because ACK can be aleady arrived at output buffer
@@ -148,17 +146,16 @@ BOOL kChangeKeyboardLED(BOOL bCpasLockOn, BOOL bNumLockOn, BOOL bScrollLockOn)
 		// If the read data is ACK, return TRUE
 		if ( kInPortByte( 0x60 ) == 0xFA )
 		{
-			return TRUE;
+			break;
 		}
 	}
-	if ( i >= 100 )
+	if ( j >= 100 )
 	{
 		return FALSE;
 	}
 	
 	// Send changing value to keyboard and wait
 	kOutPortByte( 0x60, ( bCpasLockOn << 2 ) | ( bNumLockOn << 1 ) | bScrollLockOn );
-		kOutPortByte( 0x60, 0xED );
 	for ( i = 0 ; i < 0xFFFF ; i++ )
 	{
 		// If input buffer is empty,
@@ -187,10 +184,10 @@ BOOL kChangeKeyboardLED(BOOL bCpasLockOn, BOOL bNumLockOn, BOOL bScrollLockOn)
 		// If the read data is ACK, return TRUE
 		if ( kInPortByte( 0x60 ) == 0xFA )
 		{
-			return TRUE;
+			break;
 		}
 	}
-	if ( i >= 100 )
+	if ( j >= 100 )
 	{
 		return FALSE;
 	}
@@ -399,7 +396,7 @@ BOOL kIsNumberOrSymbolScanCode( BYTE bScanCode )
 BOOL kIsNumberPadScanCode( BYTE bScanCode )
 {
 	// number pad is in 71 ~ 83
-	if ( ( 71 < bScanCode ) && ( bScanCode <= 83 ) )
+	if ( ( 71 <= bScanCode ) && ( bScanCode <= 83 ) )
 	{
 		return TRUE;
 	}
@@ -408,7 +405,7 @@ BOOL kIsNumberPadScanCode( BYTE bScanCode )
 }
 
 // Check scan code is combined 
-BOOL kIsUseCombinedCode( BOOL bScanCode )
+BOOL kIsUseCombinedCode( BYTE bScanCode )
 {
 	BYTE bDownScanCode;
 	BOOL bUseCombinedKey = FALSE;
@@ -420,7 +417,7 @@ BOOL kIsUseCombinedCode( BOOL bScanCode )
 	if ( kIsAlphabetScanCode( bDownScanCode ) == TRUE )
 	{
 		// One of both work
-		if ( gs_stKeyboardManager.bShiftDown ^ gs_stKeyboardManager.bScrollLockOn )
+		if ( gs_stKeyboardManager.bShiftDown ^ gs_stKeyboardManager.bCapsLockOn )
 		{
 			bUseCombinedKey = TRUE;
 		}
@@ -476,7 +473,7 @@ void updateCombinationKeyStatusAndLED( BYTE bScanCode )
 	if ( bScanCode & 0x80 )
 	{
 		bDown = FALSE;
-		bDownScanCode = bScanCode & 0x70;
+		bDownScanCode = bScanCode & 0x7F;
 	}
 	else
 	{
@@ -491,21 +488,21 @@ void updateCombinationKeyStatusAndLED( BYTE bScanCode )
 		gs_stKeyboardManager.bShiftDown = bDown;
 	}
 	// Caps Lock
-	else if ( ( bDownScanCode == 58 ) || ( bDown == TRUE ) )
+	else if ( ( bDownScanCode == 58 ) && ( bDown == TRUE ) )
 	{
 		gs_stKeyboardManager.bCapsLockOn ^= TRUE;
 		// Update LED 
 		bLEDStatusChanged = TRUE;
 	}
 	// Num Lock
-	else if ( ( bDownScanCode == 69 ) || ( bDown = TRUE ) )
+	else if ( ( bDownScanCode == 69 ) && ( bDown = TRUE ) )
 	{
 		gs_stKeyboardManager.bNumLockOn ^= TRUE;
 		// Update LED 
 		bLEDStatusChanged = TRUE;
 	}
 	// Scroll Lock
-	else if ( ( bDownScanCode == 70 ) || ( bDown = TRUE ) )
+	else if ( ( bDownScanCode == 70 ) && ( bDown = TRUE ) )
 	{
 		gs_stKeyboardManager.bScrollLockOn ^= TRUE;
 		// Update LED 
@@ -521,10 +518,10 @@ void updateCombinationKeyStatusAndLED( BYTE bScanCode )
 }
 
 // Transform scan code to ASCII cdoe
-BOOL kConvertScanCodeToASCIICode( BYTE bScanCode, BYTE * pbASCIICode, BYTE * pbFlags)
+BOOL kConvertScanCodeToASCIICode( BYTE bScanCode, BYTE * pbASCIICode, BOOL * pbFlags )
 {
 	BOOL bUseCombinedKey;
-	
+
 	// If previous key was PAUSE, 
 	// Ignore remain scan code of PAUSE
 	if ( gs_stKeyboardManager.iSkipCountForPause > 0 )
@@ -532,9 +529,9 @@ BOOL kConvertScanCodeToASCIICode( BYTE bScanCode, BYTE * pbASCIICode, BYTE * pbF
 		gs_stKeyboardManager.iSkipCountForPause--;
 		return FALSE;
 	}
-	
+
 	// Special handler for PAUSE
-	if ( bScanCode = 0xE1 )
+	if ( bScanCode == 0xE1 )
 	{
 		*pbASCIICode = KEY_PAUSE;
 		*pbFlags = KEY_FLAGS_DOWN;
@@ -554,13 +551,13 @@ BOOL kConvertScanCodeToASCIICode( BYTE bScanCode, BYTE * pbASCIICode, BYTE * pbF
 	// Set key value
 	if ( bUseCombinedKey == TRUE ) 
 	{
-		*pbASCIICode = gs_vstKeyMappingTable[bScanCode & 0x70].bCombinedCode;
+		*pbASCIICode = gs_vstKeyMappingTable[bScanCode & 0x7F].bCombinedCode;
 	}
 	else
 	{
 		*pbASCIICode = gs_vstKeyMappingTable[bScanCode & 0x7F].bNormalCode;
 	}
-
+	
 	// Set extended key 
 	if ( gs_stKeyboardManager.bExtendedCodeIn == TRUE )
 	{
@@ -580,5 +577,20 @@ BOOL kConvertScanCodeToASCIICode( BYTE bScanCode, BYTE * pbASCIICode, BYTE * pbF
 	
 	// Update combination key down or up
 	updateCombinationKeyStatusAndLED( bScanCode );
+	
+	// Skip single shift key
+	if ( gs_stKeyboardManager.bShiftDown == TRUE &&
+		( ( bScanCode & 0x7F ) == 42 || ( bScanCode & 0x7F ) == 54) )
+		return FALSE;
+	// Skip single Caps Lock key
+	else if ( ( bScanCode & 0x7F ) == 58 )
+		return FALSE;
+	// Skip single Number Lock key 
+	else if ( ( bScanCode & 0x7F ) == 69 )
+		return FALSE;
+	// Skip Scroll Lock key 
+	else if ( ( bScanCode & 0x7F ) == 70 )
+		return FALSE;
+	
 	return TRUE;
 }
