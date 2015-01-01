@@ -3,7 +3,7 @@
 SECTION .text			; Define text section
 
 ; Expose the name to use it in C
-global kInPortByte, kOutPortByte
+global kInPortByte, kOutPortByte, kLoadGDTR, kLoadTR, kLoadIDTR
 
 ; Read 1 byte from port 
 ; 	PARAM: port number
@@ -32,5 +32,23 @@ kOutPortByte:
 	
 	pop rax			; Roll back the temporary register
 	pop rdx	
+	ret 
+	
+; Set GDT table in GDTR register
+;	PARAM: Address of structure to store GDT table
+kLoadGDTR:
+	lgdt [rdi]		; Load the parameter 1 and set the GDT table
+	ret
+
+; Set TSS segment register in TR register
+;	PARAM: Offset of TSS segment register
+kLoadTR:
+	ltr di			; Set the parameter 1 and load TSS segment
+	ret 
+	
+; Set IDT table in IDTR register
+;	PARAM: Address of structure to store IDT table
+kLoadIDTR:
+	lidt [rdi]		; Load the parameter 1 and set the IDT table
 	ret 
 	
