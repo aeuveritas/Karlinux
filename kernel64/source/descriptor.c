@@ -23,9 +23,9 @@ void kInitializeGDTTableAndTSS( void )
 	
 	// Create 4 segment for NULL, 64 bit Code/Data, TSS
 	kSetGDTEntry8( &( pstEntry[0] ), 0, 0, 0, 0, 0 );
-	kSetGDTEntry8( &( pstEntry[1] ), 0, 0xFFFFFF, GDT_FLAGS_UPPER_CODE ,
+	kSetGDTEntry8( &( pstEntry[1] ), 0, 0xFFFFF, GDT_FLAGS_UPPER_CODE ,
 		       GDT_FLAGS_LOWER_KERNELCODE, GDT_TYPE_CODE );
-	kSetGDTEntry8( &( pstEntry[2] ), 0, 0xFFFFFF, GDT_FLAGS_UPPER_DATA,
+	kSetGDTEntry8( &( pstEntry[2] ), 0, 0xFFFFF, GDT_FLAGS_UPPER_DATA,
 		       GDT_FLAGS_LOWER_KERNELDATA, GDT_TYPE_DATA );
 	kSetGDTEntry16( ( GDTENTRY16 * ) &( pstEntry[3] ), ( QWORD ) pstTSS,
 			sizeof( TSSSEGMENT ) - 1, GDT_FLAGS_UPPER_TSS,
@@ -115,13 +115,13 @@ void kSetIDTEntry( IDTENTRY * pstEntry, void * pvHandler, WORD wSelector,
 // Interrupt or Exception Handler 
 void kDummyHandler( void )
 {
-	kPrintString( 0, 0, "==============================================================" );
-	kPrintString( 0, 1, "		Dummy Interrupt Handler Execute~!!!		   " );
-	kPrintString( 0, 2, "		  Interrupt or Exception Occur~!!!		   " );
-	kPrintString( 0, 3, "==============================================================" );
+	kPrintString( 0, 0, "======================================================================" );
+	kPrintString( 0, 1, "                Dummy Interrupt Handler Execute~!!!                   " );
+	kPrintString( 0, 2, "                  Interrupt or Exception Occur~!!!                    " );
+	kPrintString( 0, 3, "======================================================================" );
 
 	while( 1 )
 	{
-		kPrintString( 0, 4, "Karl Karl Karl Karl Karl" );
+
 	}
 }
