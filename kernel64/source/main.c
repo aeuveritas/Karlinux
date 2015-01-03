@@ -2,6 +2,7 @@
 #include "printString.h"
 #include "keyboard.h"
 #include "descriptor.h"
+#include "PIC.h"
 
 // Main function
 void main(void)
@@ -45,6 +46,13 @@ void main(void)
 		}
 	}
 	
+	kPrintString( 0, 13, "PIC Controller And Interrupt Initialize.....[    ]" );
+	// Initiate PIC Controller and Enable All interrupt
+	kInitializePIC();
+	kMaskPICInterrupt( 0 );
+	kEnableInterrupt();
+	kPrintString(45, 13, "Pass" );
+	
 	// Simple Shell
 	while ( 1 )
 	{
@@ -60,7 +68,7 @@ void main(void)
 				// Printf the key 
 				if ( bFlags & KEY_FLAGS_DOWN )
 				{
-					kPrintString( i++, 13, vcTemp );
+					kPrintString( i++, 14, vcTemp );
 					
 					// Sample test code
 					if ( vcTemp[0] == '0' )

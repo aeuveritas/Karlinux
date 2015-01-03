@@ -4,6 +4,7 @@ SECTION .text			; Define text section
 
 ; Expose the name to use it in C
 global kInPortByte, kOutPortByte, kLoadGDTR, kLoadTR, kLoadIDTR
+global kEnableInterrupt, kDisableInterrupt, kReadRFLAGS
 
 ; Read 1 byte from port 
 ; 	PARAM: port number
@@ -50,5 +51,25 @@ kLoadTR:
 ;	PARAM: Address of structure to store IDT table
 kLoadIDTR:
 	lidt [rdi]		; Load the parameter 1 and set the IDT table
+	ret 
+	
+	
+; Enable Interrupt 
+; 	PARAM: Nope
+kEnableInterrupt:
+	sti			; Enable interrupt 
+	ret 
+	
+; Disable Interrupt
+; 	PARAM: Nope
+kDisableInterrupt:
+	cli			; Disable interrupt 
+	ret 
+	
+; Return read value of RFLAGS register
+; 	PARAM: Nope
+kReadRFLAGS:
+	pushfq			; Store RFLAGS in stack
+	pop rax			; Store RFLGAS register value to RAX register
 	ret 
 	

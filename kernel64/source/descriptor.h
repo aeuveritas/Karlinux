@@ -70,8 +70,8 @@
 #define IDT_FLAGS_IST1		1
 
 // Usable Macro
-#define IDT_FLAGS_KERNEL	( IDT_FLAGS_DPL0 | IDT_FLAGS_P )
-#define IDT_FALGS_USER		( IDT_FLAGS_DPL3 | IDT_FLAGS_P )
+#define IDT_FLAGS_KERNEL        ( IDT_FLAGS_DPL0 | IDT_FLAGS_P )
+#define IDT_FLAGS_USER          ( IDT_FLAGS_DPL3 | IDT_FLAGS_P )
 
 // Other Macro
 // The number of IDT entry
@@ -82,7 +82,7 @@
 // Start address of IDT
 #define IDT_STARTADDRESS	( IDTR_STARTADDRESS + sizeof( IDTR ) )
 // Total size of IDT table
-#define IDT_TABLESIZE		( IDT_MAXENTRYCOUNT + sizeof( IDTENTRY ) )
+#define IDT_TABLESIZE		( IDT_MAXENTRYCOUNT * sizeof( IDTENTRY ) )
 
 // Start address of IDT_FLAGS_IST
 #define IST_STARTADDRESS	0x700000
@@ -134,7 +134,7 @@ typedef struct kGDTEntry16Struct
 // TSS Data Structure
 typedef struct kTSSDataStruct
 {
-	DWORD dwReserved;
+	DWORD dwReserved1;
 	QWORD qwRsp[3];
 	QWORD qwReserved2;
 	QWORD qwIST[7];
@@ -170,6 +170,5 @@ void kInitializeTSSSegment( TSSSEGMENT * pstTSS );
 void kInitializeIDTTables( void );
 void kSetIDTEntry( IDTENTRY * pstEntry, void * pvHandler, WORD wSelector, 
 		   BYTE bIST, BYTE bFlags, BYTE bType );
-void kDummyHandler( void );
 
 #endif 
