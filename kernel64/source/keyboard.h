@@ -53,6 +53,9 @@
 #define KEY_F12			0x9F
 #define KEY_PAUSE		0xA0
 
+// Max size of Key Queue
+#define KEY_MAXQUEUECOUNT 	100
+
 // Structure
 #pragma pack( push , 1 )
 
@@ -65,8 +68,6 @@ typedef struct kKeyMappingEntryStruct
 	// ASII code being able to merge wuth shift or caps lock
 	BYTE bCombinedCode;
 } KEYMAPPINGENTRY;
-
-#pragma pack( pop )
 
 // Structure for managing keyboard state
 typedef struct kKeyboardManageStruct
@@ -82,6 +83,19 @@ typedef struct kKeyboardManageStruct
 	int iSkipCountForPause;
 } KEYBOARDMANAGER;
 
+// Structure for key put data
+typedef struct kKeyDataStruct
+{
+	// Scan code from keyboard
+	BYTE bScanCode;
+	// ASCII code from Scan code
+	BYTE bASCIICode;
+	// Flag for key state (Push, Pull, Extension)
+	BYTE bFlags;
+} KEYDATA;
+
+#pragma pack( pop )
+
 // Functions
 BOOL kIsOutputBufferFull( void );
 BOOL kIsInputBufferFull( void );
@@ -96,6 +110,10 @@ BOOL kIsNumberPadScanCode( BYTE bScanCode );
 BOOL kIsUseCombinedCode( BOOL bScanCode );
 void updateCombinationKeyStatusAndLED( BYTE bScanCode );
 BOOL kConvertScanCodeToASCIICode( BYTE bScanCode, BYTE * pbASCIICode, BOOL * pbFlags );
+BOOL kInitializeKeyboard( void );
+BOOL kConvertScanCodeAndPutQueue( BYTE bScanCode );
+BOOL kGetKeyFromKeyQueue( KEYDATA * pstData );
+BOOL kWaitForACKAndPutOtherScanCode( void );
 
 #endif /* __KEYBOARD_H__ */
 

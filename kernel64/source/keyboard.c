@@ -1,6 +1,7 @@
 #include "types.h"
 #include "assemblyUtility.h"
 #include "keyboard.h"
+#include "queue.h"
 
 /* 
  * Input is from processor to devices
@@ -38,11 +39,59 @@ BOOL kIsInputBufferFull( void )
 	return FALSE;
 }
 
+// Wait for ACK
+//	If input is not ACK, translate it and put it to queue
+unsigned char kWaitForACKAndPutOtherScanCode( void )
+{
+	int i, j;
+	BYTE bData;
+	BOOL bResult = FALSE;
+	
+	// Wait for ACK
+	// Check ACK in received 100 data,
+	// Because ACK can be aleady arrived at output buffer
+	for ( j = 0 ; j < 100 ; j++ )
+	{
+		// 0xFFFF is enough time for emptying the input buffer.
+		// Even though input buffer is not empty after 0xFFFF,
+		// Ignore the remained data
+		for ( i = 0 ; i < 0xFFFF ; i++ )
+		{
+			// If the output buffer is full, we cannot read data
+			if ( kIsOutputBufferFull() == TRUE )
+			{
+				break;
+			}
+		}
+		
+		// If the read data is ACK, return TRUE
+		bData = kInPortByte( 0x60 );
+		if ( bData == 0xFA )
+		{
+			bResult = TRUE;
+			break;
+		}
+		// If the read data is not ACL,
+		// Translate it to ASCII code and put it to queue
+		else
+		{
+			kConvertScanCodeAndPutQueue( bData );
+		}
+	}
+	
+	return bResult;
+}
+
+
 // Enable Keyboard
 BOOL kActivateKeyboard( void )
 {
-	int i;
-	int j;
+	int i, j;
+	BOOL bPreviousInterrupt;
+	BOOL bResult;
+	
+	// Disable interrupt 
+	bPreviousInterrupt = kSetInterruptFlag( FALSE );
 	
 	// Send enable command(0xAE) to control/state register(port 0x64)
 	kOutPortByte( 0x64, 0xAE );
@@ -59,33 +108,17 @@ BOOL kActivateKeyboard( void )
 			break;
 		}
 	}
+	
 	// Send enable command(0xF4) to control/state register(port 0x64)
 	kOutPortByte( 0x60, 0xF4 );
-	// Wait for ACK
-	// Check ACK in received 100 data,
-	// Because ACK can be aleady arrived at output buffer
-	for ( j = 0 ; j < 100 ; j++ )
-	{
-		// 0xFFFF is enough time for emptying the input buffer.
-		// Even though input buffer is not empty after 0xFFFF,
-		// Ignore the remained data
-		for ( i = 0 ; i < 0xFFFF ; i++ )
-		{
-			// If the output buffer is full, we can read data
-			if ( kIsOutputBufferFull() == TRUE )
-			{
-				break;
-			}
-		}
-		
-		// If the read data is ACK, return TRUE
-		if ( kInPortByte( 0x60 ) == 0xFA )
-		{
-			return TRUE;
-		}
-	}
+
+	// Wait for ACK 
+	bResult = kWaitForACKAndPutOtherScanCode();
 	
-	return FALSE;
+	// Restore previous interrupt
+	kSetInterruptFlag( bPreviousInterrupt );
+	
+	return bResult;
 }
 
 // Read data from output buffer
@@ -104,6 +137,12 @@ BYTE kGetKeyboardScanCode( void )
 BOOL kChangeKeyboardLED(BOOL bCpasLockOn, BOOL bNumLockOn, BOOL bScrollLockOn)
 {
 	int i, j;
+	BOOL bPreviousInterrupt;
+	BOOL bResult;
+	BYTE bData;
+	
+	// Disable interrupt
+	bPreviousInterrupt = kSetInterruptFlag( FALSE );
 	
 	// Before sending LED change command,
 	// Check output buffer is empty
@@ -129,30 +168,15 @@ BOOL kChangeKeyboardLED(BOOL bCpasLockOn, BOOL bNumLockOn, BOOL bScrollLockOn)
 	}
 	
 	// Wait for ACK
-	for ( j = 0 ; j < 100 ; j++ )
+	bResult = kWaitForACKAndPutOtherScanCode();
+	
+	if ( bResult = FALSE )
 	{
-		// 0xFFFF is enough time for emptying the input buffer.
-		// Even though input buffer is not empty after 0xFFFF,
-		// Ignore the remained data
-		for ( i = 0 ; i < 0xFFFF ; i++ )
-		{
-			// If the output buffer is full, we can read data
-			if ( kIsOutputBufferFull() == TRUE )
-			{
-				break;
-			}
-		}
-		
-		// If the read data is ACK, return TRUE
-		if ( kInPortByte( 0x60 ) == 0xFA )
-		{
-			break;
-		}
-	}
-	if ( j >= 100 )
-	{
+		// Restore previous interrupt
+		kSetInterruptFlag( bPreviousInterrupt );
 		return FALSE;
 	}
+	
 	
 	// Send changing value to keyboard and wait
 	kOutPortByte( 0x60, ( bCpasLockOn << 2 ) | ( bNumLockOn << 1 ) | bScrollLockOn );
@@ -167,32 +191,12 @@ BOOL kChangeKeyboardLED(BOOL bCpasLockOn, BOOL bNumLockOn, BOOL bScrollLockOn)
 	}
 	
 	// Wait for ACK
-	for ( j = 0 ; j < 100 ; j++ )
-	{
-		// 0xFFFF is enough time for emptying the input buffer.
-		// Even though input buffer is not empty after 0xFFFF,
-		// Ignore the remained data
-		for ( i = 0 ; i < 0xFFFF ; i++ )
-		{
-			// If the output buffer is full, we can read data
-			if ( kIsOutputBufferFull() == TRUE )
-			{
-				break;
-			}
-		}
-		
-		// If the read data is ACK, return TRUE
-		if ( kInPortByte( 0x60 ) == 0xFA )
-		{
-			break;
-		}
-	}
-	if ( j >= 100 )
-	{
-		return FALSE;
-	}
+	bResult = kWaitForACKAndPutOtherScanCode();
 	
-	return TRUE;
+	// Restore previous interrupt
+	kSetInterruptFlag( bPreviousInterrupt );
+	return bResult;
+	
 }
 
 // Enable A20 gate
@@ -271,6 +275,10 @@ void kReboot( void )
 ///////////////////////////////////////////////////////////////////////////////
 // Keyboard manager
 static KEYBOARDMANAGER gs_stKeyboardManager = { 0, } ;
+
+// Queue & Buffer
+static QUEUE gs_stKeyQueue;
+static KEYDATA gs_vstKeyQueueBuffer[KEY_MAXQUEUECOUNT];
 
 // Table for transforming scan code to ASCII code
 static KEYMAPPINGENTRY gs_vstKeyMappingTable[KEY_MAPPINGTABLEMAXCOUNT] = 
@@ -593,4 +601,65 @@ BOOL kConvertScanCodeToASCIICode( BYTE bScanCode, BYTE * pbASCIICode, BOOL * pbF
 		return FALSE;
 	
 	return TRUE;
+}
+
+unsigned char kInitializeKeyboard( void )
+{
+	// Initialize Queue
+	kInitializeQueue( &gs_stKeyQueue, gs_vstKeyQueueBuffer, KEY_MAXQUEUECOUNT,
+				sizeof( KEYDATA ) );
+	
+	// Activate Keyboard
+	return kActivateKeyboard();
+}
+
+// Translate scan code to internal key and put it to queue
+unsigned char kConvertScanCodeAndPutQueue( BYTE bScanCode )
+{
+	KEYDATA stData;
+	BOOL bResult = FALSE;
+	BOOL bPreviousInterrupt;
+	
+	// Insert scan code to key data
+	stData.bScanCode = bScanCode;
+	
+	// Translate scan code to ASCII code and put it to queue
+	if ( kConvertScanCodeToASCIICode( bScanCode, &( stData.bASCIICode ),
+		&( stData.bFlags ) ) == TRUE )
+	{
+		// Disable interrupt
+		bPreviousInterrupt = kSetInterruptFlag( FALSE );
+		
+		// Put key to queue
+		bResult = kPutQueue( &gs_stKeyQueue, &stData );
+		
+		// Restore previous interrupt
+		kSetInterruptFlag( bPreviousInterrupt );
+	}
+	
+	return bResult;
+}
+
+// Get key data from queue
+BOOL kGetKeyFromKeyQueue( KEYDATA * pstData )
+{
+	BOOL bResult;
+	BOOL bPreviousInterrupt;
+	
+	// If the queue is empty, we cannot get data
+	if ( kIsQueueEmpty( &gs_stKeyQueue ) == TRUE )
+	{
+		return FALSE;
+	}
+	
+	// Disable interrupt
+	bPreviousInterrupt = kSetInterruptFlag( FALSE );
+	
+	// Get key data from key queue
+	bResult = kGetQueue( &gs_stKeyQueue, pstData );
+	
+	// Restore previouse interrupt
+	kSetInterruptFlag( bPreviousInterrupt );
+	
+	return bResult;
 }

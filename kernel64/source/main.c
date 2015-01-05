@@ -11,6 +11,7 @@ void main(void)
 	BYTE bFlags;
 	BYTE bTemp;
 	int i = 0;
+	KEYDATA stData;
 	
 	kPrintString( 45, 7, "Pass" );
 	kPrintString( 0, 8, "IA-32e C Language Kernel Start..............[Pass]" );
@@ -30,9 +31,8 @@ void main(void)
 	kPrintString( 45, 11, "Pass" );
 	
 	kPrintString( 0, 12, "Keyboard Activate...........................[    ]" );
-	
 	// Enable keyboard
-	if ( kActivateKeyboard() == TRUE )
+	if ( kInitializeKeyboard() == TRUE )
 	{
 		kPrintString( 45, 12, "Pass" );
 		kChangeKeyboardLED( FALSE, FALSE, FALSE );
@@ -56,25 +56,20 @@ void main(void)
 	// Simple Shell
 	while ( 1 )
 	{
-		// If output buffer is full, read scan code
-		if ( kIsOutputBufferFull() == TRUE )
+		// If data is in key queue, process
+		if ( kGetKeyFromKeyQueue( &stData ) == TRUE )
 		{
-			// Read data from output buffer
-			bTemp = kGetKeyboardScanCode();
-
-			// Transform scan code to ASCII code
-			if ( kConvertScanCodeToASCIICode( bTemp, &( vcTemp[0] ), &bFlags ) == TRUE )
+			// If key is down, print ASCII code of the key
+			if ( stData.bFlags & KEY_FLAGS_DOWN )
 			{
-				// Printf the key 
-				if ( bFlags & KEY_FLAGS_DOWN )
-				{
-					kPrintString( i++, 14, vcTemp );
+				// Store ASCII code of key 
+				vcTemp[0] = stData.bASCIICode;
+				kPrintString( i++, 14, vcTemp );
 					
-					// Sample test code
-					if ( vcTemp[0] == '0' )
-					{
-						bTemp = bTemp / 0;
-					}
+				// Sample test code
+				if ( vcTemp[0] == '0' )
+				{
+					bTemp = bTemp / 0;
 				}
 			}
 		}

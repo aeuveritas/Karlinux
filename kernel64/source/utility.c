@@ -1,4 +1,5 @@
 #include "utility.h"
+#include "assemblyUtility.h"
 
 // Fill the memory with specific value
 void kMemSet( void * pvDestination, BYTE bData, int iSize )
@@ -41,4 +42,32 @@ int kMemCmp( const void * pvDestination, const void * pvSource, int iSize )
 	}
 	
 	return 0;
+}
+
+// Swith interrupt flag in RFLAGS register,
+// and return previous interrupt flag state
+BOOL kSetInterruptFlag( BOOL bEnableInterrupt )
+{
+	QWORD qwRFLAGS;
+	
+	// Read previous RFLAGS register value,
+	// and Enable/Disable interrupt
+	qwRFLAGS = kReadRFLAGS();
+	if ( bEnableInterrupt == TRUE )
+	{
+		kEnableInterrupt();
+	}
+	else
+	{
+		kDisableInterrupt();
+	}
+	
+	// Check IF bit (bit 9) in previous RFLAGS register,
+	// and return previous interrupt flag state
+	if ( qwRFLAGS & 0x0200 )
+	{
+		return TRUE;
+	}
+	
+	return FALSE;
 }
