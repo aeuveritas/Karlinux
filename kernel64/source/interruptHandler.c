@@ -1,6 +1,7 @@
 #include "interruptHandler.h"
 #include "PIC.h"
 #include "keyboard.h"
+#include "console.h"
 
 // Common exception handler 
 void kCommonExceptionHandler( int iVectorNumber, QWORD qwErrorCode )
@@ -11,11 +12,11 @@ void kCommonExceptionHandler( int iVectorNumber, QWORD qwErrorCode )
 	vcBuffer[0] = '0' + iVectorNumber / 10;
 	vcBuffer[1] = '0' + iVectorNumber % 10;
 	
-	kPrintString( 0, 0, "======================================================================" );
-	kPrintString( 0, 1, "                          Exception Occur!!                           " );
-	kPrintString( 0, 2, "                             Vector :                                 " );
-	kPrintString( 38, 2, vcBuffer );
-	kPrintString( 0, 3, "======================================================================" );
+	kPrintStringXY( 0, 0, "======================================================================" );
+	kPrintStringXY( 0, 1, "                          Exception Occur!!                           " );
+	kPrintStringXY( 0, 2, "                             Vector :                                 " );
+	kPrintStringXY( 38, 2, vcBuffer );
+	kPrintStringXY( 0, 3, "======================================================================" );
 	
 	while( 1 ) ;
 }
@@ -34,7 +35,7 @@ void kCommonInterruptHandler(int iVectorNumber)
 	// Print the number of interrupt
 	vcBuffer[10] = '0' + g_iCommonInterruptCount;
 	g_iCommonInterruptCount = ( g_iCommonInterruptCount + 1 ) % 10;
-	kPrintString( 67, 0, vcBuffer );
+	kPrintStringXY( 67, 0, vcBuffer );
 	// ====================================================================
 	
 	// Send EOI
@@ -56,7 +57,7 @@ void kKeyboardHandler( int iVectorNumber )
 	// Print the number of interrupt
 	vcBuffer[10] = '0' + g_iCommonInterruptCount;
 	g_iCommonInterruptCount = ( g_iCommonInterruptCount + 1 ) % 10;
-	kPrintString( 0, 0, vcBuffer );
+	kPrintStringXY( 0, 0, vcBuffer );
 	// ====================================================================
 	
 	// Read data from key controller and translate the data to ASCII code and put it ti queue

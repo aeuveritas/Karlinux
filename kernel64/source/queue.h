@@ -5,7 +5,7 @@
 
 // Structure
 // Align 1 byte
-#pragma pakc( push, 1 )
+#pragma pack( push, 1 )
 
 // Structure for Queue 
 typedef struct kQueueManagerStruct

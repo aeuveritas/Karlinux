@@ -154,7 +154,7 @@ kISRBoundRangeExceeded:
 	iretq			; Handler done and back to previous code
 	
 ; #6, Invalid Opcode ISR 
-kISRInvalidOpcode
+kISRInvalidOpcode:
 	KSAVECONTEXT		; Store context and switch selector to
 				; kernel data descriptor
 	; Insert exception number and call handler
