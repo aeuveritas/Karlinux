@@ -51,6 +51,7 @@ void main(void)
 	{
 		kSetCursor( 45, iCursorY++ );
 		kPrintf( "Fail\n" );
+	
 		while ( 1 )
 		{
 			;

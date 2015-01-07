@@ -96,6 +96,7 @@ void kCheckTotalRAMSize( void )
 	
 	// From 64MB(0x4000000), Check each 4MB
 	pdwCurrentAddress = ( DWORD * ) 0x4000000;
+	/*
 	while ( 1 )
 	{
 		// Store previous data temporary
@@ -114,7 +115,7 @@ void kCheckTotalRAMSize( void )
 		// Move to next 4MB
 		pdwCurrentAddress += ( 0x400000 / 4 );
 	}
-	
+	*/
 	// Calculate How many 1MB is here
 	gs_qwTotalRAMMBSize = ( QWORD ) pdwCurrentAddress / 0x100000;
 }
@@ -305,7 +306,7 @@ int kDecimalToString( long lValue, char * pcBuffer )
 		kReverseString( pcBuffer );
 	}
 	
-	return 1;
+	return i;
 }
 	
 // Revers string
