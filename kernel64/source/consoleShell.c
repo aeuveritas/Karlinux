@@ -7,7 +7,12 @@ SHELLCOMMANDENTRY gs_vstCommandTable[] =
 	{ "cls", "Clear Screen", kCls },
 	{ "totalram", "Show Total RAM Size", kShowTotalRAMSize },
 	{ "strtod", "String To Decimal/Hex Convert", kStringToDecimalHexTest },
-	{ "shutdown", "Shutdown And Reboot OS", kShutdown }
+	{ "shutdown", "Shutdown And Reboot OS", kShutdown },
+	{ "settimer", "Set PIT Controller Counter0, ex)settimer 10(ms) 1(periodic)", kSetTimer },
+	{ "wait", "Wait ms Using PIT, ex)wait 100(ms)", kWaitUsingPIT },
+	{ "rdtsc", "Read Time Stamp Counter", kReadTimeStampCounter },
+	{ "cpuspeed", "Measure Processor Speed", kMeasureProcessorSpeed },
+	{ "date", "Show Date And Time", kShowDateAndTime }
 };
 
 //=============================================================================
@@ -266,4 +271,119 @@ void kShutdown( const char* pcParameterBuffer )
 	kPrintf( "Press Any Key To Reboot PC..." );
 	kGetCh();
 	kReboot();
+}
+
+// Set 0 to PIT Controller counter
+void kSetTimer( const char * pcParameterBuffer )
+{
+	char vcParameter[100];
+	PARAMETERLIST stList;
+	long lValue;
+	BOOL bPeriodic;
+	
+	// Initialize parameter
+	kInitializeParameter( &stList, pcParameterBuffer );
+	
+	// Extract milisecond
+	if ( kGetNextParameter( &stList, vcParameter ) == 0 )
+	{
+		kPrintf( "ex)settimer 10(ms) 1(periodic)\n" );
+		return;
+	}
+	lValue = kAToI( vcParameter, 10 );
+	
+	// Extract periodic
+	if ( kGetNextParameter( &stList, vcParameter ) == 0 )
+	{
+		kPrintf( "ex)settimer 10(ms) 1(periodic)\n" );
+		return;
+	}
+	bPeriodic = kAToI( vcParameter, 10 );
+	
+	kInitializePIT( MSTOCOUNT( lValue ), bPeriodic );
+	kPrintf( "Time= %d ms, Periodic = %d Change Complete\n", lValue, bPeriodic );
+}
+
+// Wait for ms by PIT controller
+void kWaitUsingPIT( const char * pcParameterBuffer )
+{
+	char vcParameter[100];
+	int iLength;
+	PARAMETERLIST stList;
+	long lMillisecond;
+	int i;
+	
+	// Initialize parameter
+	kInitializeParameter( &stList, pcParameterBuffer );
+	if (kGetNextParameter( &stList, vcParameter ) == 0 )
+	{
+		kPrintf( "ex) wait 100(ms)\n" );
+		return;
+	}
+
+	lMillisecond = kAToI( pcParameterBuffer, 10 );
+	kPrintf( "%d ms Sleep Start...\n", lMillisecond );
+	
+	// Disable interrupt and measure the time by PIT controller
+	kDisableInterrupt();
+	for ( i = 0 ; i < lMillisecond / 30 ; i++ )
+	{
+		kWaitUsingDirectPIT( MSTOCOUNT( 30 ) );
+	}
+	kWaitUsingDirectPIT( MSTOCOUNT( lMillisecond % 30 ) );
+	kEnableInterrupt();
+	kPrintf( "%d ms Sleep Complete\n", lMillisecond );
+	
+	// Restore kSetTimer
+	kInitializePIT( MSTOCOUNT( 1 ), TRUE );
+}
+
+// Read Time stamp count
+void kReadTimeStampCounter( const char * pcParameterBuffer )
+{
+	QWORD qwTSC;
+	
+	qwTSC = kReadTSC();
+	kPrintf( "Time Stamp Counter = %q\n", qwTSC );
+}
+
+// Measure the speed of processor
+void kMeasureProcessorSpeed( const char * pcParameterBuffer )
+{
+	int i;
+	QWORD qwLastTSC, qwTotalTSC = 0;
+	
+	kPrintf( "Now Measuring." );
+	
+	// For 10 seconds, calculate processor speed by measuring the change of time stamp
+	kDisableInterrupt();
+	for ( i = 0 ; i < 200 ; i++ )
+	{
+		qwLastTSC = kReadTSC();
+		kWaitUsingDirectPIT( MSTOCOUNT( 50 ) );
+		qwTotalTSC += kReadTSC() - qwLastTSC;
+		
+		kPrintf( "." );
+	}
+
+	// Restore timer 
+	kInitializePIT( MSTOCOUNT( 1 ), TRUE );
+	kEnableInterrupt();
+	
+	kPrintf( "\nCPU Speed = %d MHz\n", qwTotalTSC / 10 / 1000 / 1000 );
+}
+
+// Print data and time in RTC controller
+void kShowDateAndTime( const char * pcParameterBuffer )
+{
+	BYTE bSecond, bMinute, bHour;
+	BYTE bDayOfWeek, bDayOfMonth, bMonth;
+	WORD wYear;
+	
+	// Read date and time from RTC controller
+	kReadRTCTime( &bHour, &bMinute, &bSecond );
+	kReadRTCDate( &wYear, &bMonth, &bDayOfMonth, &bDayOfWeek );
+
+	kPrintf( "Data: %d/%d/%d %s, ", wYear, bMonth, bDayOfMonth, kConvertDayOfWeekToString( bDayOfWeek ) );
+	kPrintf( "Time: %d:%d:%d\n", bHour, bMinute, bSecond );
 }

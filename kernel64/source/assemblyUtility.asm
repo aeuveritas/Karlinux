@@ -5,6 +5,7 @@ SECTION .text			; Define text section
 ; Expose the name to use it in C
 global kInPortByte, kOutPortByte, kLoadGDTR, kLoadTR, kLoadIDTR
 global kEnableInterrupt, kDisableInterrupt, kReadRFLAGS
+global kReadTSC
 
 ; Read 1 byte from port 
 ; 	PARAM: port number
@@ -71,5 +72,18 @@ kDisableInterrupt:
 kReadRFLAGS:
 	pushfq			; Store RFLAGS in stack
 	pop rax			; Store RFLGAS register value to RAX register
+	ret 
+	
+; Return time stamp counter
+; 	PARAM: Nope
+kReadTSC:
+	push rdx		; Store RDX register in stack
+	
+	rdtsc			; Read time stamp counter and store it in RDX:RAX
+	
+	shl rdx, 32		; Read upper 32 bit of RDX register and lower 32 bit of RAX register
+	or rax, rdx		; and OR them, then store it in RAX register
+	
+	pop rdx
 	ret 
 	
