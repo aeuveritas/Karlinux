@@ -3,7 +3,7 @@
 // Define command table
 SHELLCOMMANDENTRY gs_vstCommandTable[] =
 {
-	{ "help", "Show help", kHelp },
+	{ "help", "Show Help", kHelp },
 	{ "cls", "Clear Screen", kCls },
 	{ "totalram", "Show Total RAM Size", kShowTotalRAMSize },
 	{ "strtod", "String To Decimal/Hex Convert", kStringToDecimalHexTest },
@@ -56,7 +56,7 @@ void kStartConsoleShell( void )
 			{
 				// Execute command in buffer
 				vcCommandBuffer[iCommandBufferIndex] = '\0';
-				kExecuteCommand(vcCommandBuffer);
+				kExecuteCommand( vcCommandBuffer );
 			}
 			
 			// Print prompt and Initialize command buffer

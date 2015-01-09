@@ -34,14 +34,14 @@ void kSetCursor( int iX, int iY )
 	kOutPortByte( VGA_PORT_DATA, iLinearValue & 0xFF );
 	
 	// Update position
-	gs_stConsoleManager.iCurrentPrintOffest = iLinearValue;
+	gs_stConsoleManager.iCurrentPrintOffset = iLinearValue;
 }
 
 // Return current cursor position
 void kGetCursor( int * piX, int * piY )
 {
-	*piX = gs_stConsoleManager.iCurrentPrintOffest % CONSOLE_WIDTH;
-	*piY = gs_stConsoleManager.iCurrentPrintOffest / CONSOLE_WIDTH;
+	*piX = gs_stConsoleManager.iCurrentPrintOffset % CONSOLE_WIDTH;
+	*piY = gs_stConsoleManager.iCurrentPrintOffset / CONSOLE_WIDTH;
 }
 
 // Internal implementation of printf
@@ -72,7 +72,7 @@ int kConsolePrintString( const char * pcBuffer )
 	int iPrintOffset;
 
 	// Save print position
-	iPrintOffset = gs_stConsoleManager.iCurrentPrintOffest;
+	iPrintOffset = gs_stConsoleManager.iCurrentPrintOffset;
 	
 	// Print string as it's length 
 	iLength = kStrLen( pcBuffer );

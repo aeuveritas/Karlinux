@@ -56,7 +56,7 @@
 typedef struct kConsoleManagerStruct
 {
 	// position of print
-	int iCurrentPrintOffest;
+	int iCurrentPrintOffset;
 } CONSOLEMANAGER;
 
 #pragma pack( pop )
