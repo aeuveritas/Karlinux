@@ -12,7 +12,8 @@ SHELLCOMMANDENTRY gs_vstCommandTable[] =
 	{ "wait", "Wait ms Using PIT, ex)wait 100(ms)", kWaitUsingPIT },
 	{ "rdtsc", "Read Time Stamp Counter", kReadTimeStampCounter },
 	{ "cpuspeed", "Measure Processor Speed", kMeasureProcessorSpeed },
-	{ "date", "Show Date And Time", kShowDateAndTime }
+	{ "date", "Show Date And Time", kShowDateAndTime },
+	{ "createtask", "Create Task", kCreateTestTask }
 };
 
 //=============================================================================
@@ -386,4 +387,49 @@ void kShowDateAndTime( const char * pcParameterBuffer )
 
 	kPrintf( "Data: %d/%d/%d %s, ", wYear, bMonth, bDayOfMonth, kConvertDayOfWeekToString( bDayOfWeek ) );
 	kPrintf( "Time: %d:%d:%d\n", bHour, bMinute, bSecond );
+}
+
+// Define TCB structure and Stack
+static TCB gs_vstTask[2] = {0, };
+static QWORD gs_vstStack[1024] = {0, };
+
+// Test for context switching
+void kTestTask(void)
+{
+	int i = 0;
+
+	while (1)
+	{
+		// Print message and wait for key input
+		kPrintf("[%d] This message is from kTestTask. Press any key to switch " "kConsolShell!!\n", i++);
+		kGetCh();
+
+		// Context switching
+		kSwitchContext(&(gs_vstTask[1].stContext), &(gs_vstTask[0].stContext));
+	}
+}
+
+// Create a task and excute it
+void kCreateTestTask(const char * pcParameterBuffer)
+{
+	KEYDATA stData;
+	int i = 0;
+
+	// Set Task
+	kSetUpTask(&(gs_vstTask[1]), 1, 0, (QWORD) kTestTask, &(gs_vstStack), sizeof(gs_vstStack));
+
+	// Until 'q' is typed
+	while (1)
+	{
+		// Print message nad wait for key input
+		kPrintf("[%d] This message is from kConsoleShell. Press any key to switch " "TestTask!!\n", i++);
+
+		if (kGetCh() == 'q')
+		{
+			break;
+		}
+
+		// Context switching
+		kSwitchContext(&(gs_vstTask[0].stContext), &(gs_vstTask[1].stContext));
+	}
 }
