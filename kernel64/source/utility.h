@@ -5,7 +5,10 @@
 #include "assemblyUtility.h"
 #include "types.h"
 
+
 // Varialbles
+extern volatile QWORD g_qwTickCount;
+
 // Total RAM size in MB
 static QWORD gs_qwTotalRAMMBSize = 0;
 
@@ -26,5 +29,6 @@ int kDecimalToString( long lValue, char * pcBuffer );
 int kSPrintf( char * pcBuffer, const char * pcFormatString, ... );
 int kVSPrintf( char * pcBuffer, const char * pcFormatString, va_list ap );
 int kStrLen( const char* pcBuffer );
+QWORD kGetTickCount(void);
 
 #endif /* __UTILITY_H__ */

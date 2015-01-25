@@ -1,5 +1,8 @@
 #include "utility.h"
 
+// The number of PIT controller
+volatile QWORD g_qwTickCount = 0;
+
 // Fill the memory with specific value
 void kMemSet( void * pvDestination, BYTE bData, int iSize )
 {
@@ -436,3 +439,8 @@ int kVSPrintf( char * pcBuffer, const char * pcFormatString, va_list ap)
 	return iBufferIndex;
 }
 
+// Return Tick Count 
+QWORD kGetTickCount(void)
+{
+	return g_qwTickCount;
+}

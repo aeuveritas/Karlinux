@@ -4,6 +4,7 @@ SECTION .text			; Define text section
 
 ; To use some function defined in other file, import them
 extern kCommonExceptionHandler, kCommonInterruptHandler, kKeyboardHandler
+extern kTimerHandler
 
 ; Expose the name to use it in C
 ; ISR for Exception 
@@ -341,7 +342,7 @@ kISRTimer:
 				; kernel data descriptor
 	; Insert exception number code and call handler
 	mov rdi, 32
-	call kCommonInterruptHandler
+	call kTimerHandler
 	
 	KLOADCONTEXT		; Restore context
 	iretq			; Handler done and back to previous code

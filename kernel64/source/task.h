@@ -2,6 +2,7 @@
 #define __TASK_H__
 
 #include "types.h"
+#include "list.h"
 #include "descriptor.h"
 
 // MACRO
@@ -34,6 +35,20 @@
 #define TASK_RSPOFFSET		22
 #define TASK_SSOFFSET		23
 
+// Address of Task pool
+#define TASK_TCBPOOLADDRESS 0x800000
+#define TASK_MAXCOUNT		1024
+
+// Size of Stack piil and Stack
+#define TASK_STACKPOOLADDRESS (TASK_TCBPOOLADDRESS + sizeof(TCB) * TASK_MAXCOUNT)
+#define TASK_STACKSIZE		8192
+
+// Invalid task ID
+#define TASK_INVALIDID		0xFFFFFFFFFFFFFFFF
+
+// Max time for Task
+#define TASK_PROCESSORTIME	5
+
 // Structure
 // Align 1 Byte
 #pragma pack(push, 1)
@@ -47,22 +62,73 @@ typedef struct kContextStruct
 // Structure for task state
 typedef struct kTaskControlBlockStruct
 {
+	// Location and ID for next data
+	LISTLINK stLink;
+	
+	// Flag
+	QWORD qwFlags;
+	
 	// Context
 	CONTEXT stContext;
-
-	// ID & Flag
-	QWORD qwID;
-	QWORD qwFlags;
 
 	// Address & Size for Stack
 	void * pvStackAddress;
 	QWORD qwStackSize;
 } TCB;
 
+// Structure for manager TCB pool
+typedef struct kTCBPoolManagerStruct
+{
+	// Information for Task pool
+	TCB * pstStartAddress;
+	int iMaxCount;
+	int iUseCount;
+	
+	// The number of TCB
+	int iAllocatedCount;
+} TCBPOOLMANAGER;
+
+// Structure for Scheuler state
+typedef struct kSchedulerStruct
+{
+	// Current Task
+	TCB * pstRunningTask;
+	
+	// Used time
+	int iProcessorTime;
+	
+	// List for ready Task
+	LIST stReadyList;
+} SCHEDULER;
+
+// Structure for scheduler
+static SCHEDULER gs_stScheduler;
+static TCBPOOLMANAGER gs_stTCBPoolManager;
+
 #pragma pack(pop)
 
 // Functions
-void kSetUpTask(TCB * pstTCB, QWORD qwID, QWORD qwFlags, QWORD qwEntryPointAddress, void * pvStackAddress, QWORD qwStackSize);
+///////////////////////////////////////////////////////////////////////////////
+// Task Pool and Task
+///////////////////////////////////////////////////////////////////////////////
+void kInitializeTCBPool(void);
+TCB * kAllocateTCB(void);
+void kFreeTCB(QWORD qwID);
+TCB * kCreateTask(QWORD qwFlags, QWORD qwEntryPointAddress);
+void kSetUpTask(TCB * pstTCB, QWORD qwFlags, QWORD qwEntryPointAddress, void * pvStackAddress, QWORD qwStackSize);
+
+///////////////////////////////////////////////////////////////////////////////
+// Scheduler
+///////////////////////////////////////////////////////////////////////////////
+void kInitializeScheduler(void);
+void kSetRunningTask(TCB * pstTask);
+TCB * kGetRunningTask(void);
+TCB * kGetNextTaskToRun(void);
+void kAddTaskToReadyList(TCB * pstTask);
+void kSchedule(void);
+BOOL kScheduleInInterrupt(void);
+void kScheduleProcessorTime(void);
+BOOL kIsProcessorTimeExpired(void);
 
 #endif /* __TASK_H__ */
 
